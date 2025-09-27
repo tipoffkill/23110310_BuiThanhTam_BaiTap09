@@ -1,43 +1,31 @@
 package of.web;
 
-import of.dto.UploadResponse;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Map;
 import java.util.UUID;
 
-@Controller
+@RestController
 @RequestMapping("/upload")
 public class UploadController {
 
-    @Value("${upload.dir}")
-    private String uploadDir;
+  private final Path root = Paths.get("uploads");
 
-    @PostMapping("/image")
-    public String uploadImage(@RequestParam("file") MultipartFile file, Model model) throws IOException {
-        if (file.isEmpty()) {
-            model.addAttribute("msg", "Chưa chọn file!");
-            return "upload";
-        }
+  @PostMapping("/image")
+  public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+    if (file.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "Chưa chọn file"));
 
-        Path path = Paths.get("src/main/resources/static/" + uploadDir);
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
+    if (!Files.exists(root)) Files.createDirectories(root);
 
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path filepath = path.resolve(filename);
-        Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
+    String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+    Path filepath = root.resolve(filename);
+    Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
 
-        String imageUrl = "/" + uploadDir + "/" + filename;
-        model.addAttribute("msg", "Upload thành công!");
-        model.addAttribute("imageUrl", imageUrl);
-
-        return "upload";
-    }
+    String url = "/uploads/" + filename; 
+    return ResponseEntity.ok(Map.of("url", url));
+  }
 }

@@ -13,7 +13,7 @@
     <div class="col-md-3"><input type="email" id="email" class="form-control" placeholder="Email"/></div>
     <div class="col-md-2"><input type="password" id="password" class="form-control" placeholder="Password"/></div>
     <div class="col-md-2"><input type="text" id="phone" class="form-control" placeholder="Phone"/></div>
-    <div class="col-md-2"><button class="btn btn-success">Thêm</button></div>
+    <div class="col-md-2"><button class="btn btn-success w-100">Thêm</button></div>
   </form>
 
   <table class="table table-bordered">
@@ -35,13 +35,11 @@
       </div>
     </div></div>
   </div>
-	<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    renderUsers();
-  });
-</script>
-	
-  <script>renderUsers();</script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => renderUsers());
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,33 +1,27 @@
 package of.graphql;
 
+import lombok.RequiredArgsConstructor;
 import of.entity.*;
 import of.service.*;
-
-import java.math.BigDecimal;
-
-import org.springframework.graphql.data.method.annotation.Argument;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.stereotype.Controller;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
+@RequiredArgsConstructor
 public class MutationResolver {
-
     private final UserService userService;
     private final CategoryService categoryService;
     private final ProductService productService;
 
-    public MutationResolver(UserService us, CategoryService cs, ProductService ps) {
-        this.userService = us;
-        this.categoryService = cs;
-        this.productService = ps;
-    }
-
     // ==== User CRUD ====
     @MutationMapping
-    public User createUser(@Argument String fullname, @Argument String email,
-                           @Argument String password, @Argument String phone) {
-        return userService.save(User.builder()
-                .fullname(fullname).email(email).password(password).phone(phone).build());
+    public User createUser(@Argument String fullname, @Argument String email, @Argument String password, @Argument String phone) {
+        return userService.save(User.builder().fullname(fullname).email(email).password(password).phone(phone).build());
     }
 
     @MutationMapping
@@ -38,11 +32,7 @@ public class MutationResolver {
         return userService.save(u);
     }
 
-    @MutationMapping
-    public Boolean deleteUser(@Argument Long id) {
-        userService.delete(id);
-        return true;
-    }
+    @MutationMapping public Boolean deleteUser(@Argument Long id) { userService.delete(id); return true; }
 
     // ==== Category CRUD ====
     @MutationMapping
@@ -58,40 +48,39 @@ public class MutationResolver {
         return categoryService.save(c);
     }
 
-    @MutationMapping
-    public Boolean deleteCategory(@Argument Long id) {
-        categoryService.delete(id);
-        return true;
-    }
+    @MutationMapping public Boolean deleteCategory(@Argument Long id) { categoryService.delete(id); return true; }
 
     // ==== Product CRUD ====
     @MutationMapping
     public Product createProduct(@Argument String title, @Argument Integer quantity,
                                  @Argument String desc, @Argument Double price,
-                                 @Argument Long userId, @Argument String image) {
+                                 @Argument Long userId, @Argument String image,
+                                 @Argument List<Long> categoryIds) {
         User u = userService.findById(userId);
+        Set<Category> cats = categoryIds != null ? categoryIds.stream().map(categoryService::findById).collect(Collectors.toSet()) : new HashSet<>();
         return productService.save(Product.builder()
                 .title(title).quantity(quantity).desc(desc)
-                .price(java.math.BigDecimal.valueOf(price))
-                .user(u).image(image).build());
+                .price(BigDecimal.valueOf(price)).user(u).image(image).categories(cats).build());
     }
 
     @MutationMapping
     public Product updateProduct(@Argument Long id, @Argument String title,
                                  @Argument Integer quantity, @Argument String desc,
-                                 @Argument Double price, @Argument String image) {
+                                 @Argument Double price, @Argument String image,
+                                 @Argument Long userId, @Argument List<Long> categoryIds) {
         Product p = productService.findById(id);
         if (title != null) p.setTitle(title);
         if (quantity != null) p.setQuantity(quantity);
         if (desc != null) p.setDesc(desc);
-        if (price != null) p.setPrice(java.math.BigDecimal.valueOf(price));
+        if (price != null) p.setPrice(BigDecimal.valueOf(price));
         if (image != null) p.setImage(image);
+        if (userId != null) p.setUser(userService.findById(userId));
+        if (categoryIds != null) {
+            Set<Category> cats = categoryIds.stream().map(categoryService::findById).collect(Collectors.toSet());
+            p.setCategories(cats);
+        }
         return productService.save(p);
     }
 
-    @MutationMapping
-    public Boolean deleteProduct(@Argument Long id) {
-        productService.delete(id);
-        return true;
-    }
+    @MutationMapping public Boolean deleteProduct(@Argument Long id) { productService.delete(id); return true; }
 }
